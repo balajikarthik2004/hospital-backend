@@ -6,6 +6,7 @@ import { env } from './config/env.js';
 import { agentServiceHealthy } from './services/agentBridgeService.js';
 import { llm } from './services/llmClient.js';
 import { User } from './models/User.js';
+import { ensureDoctors } from './services/ensureDoctors.js';
 
 async function main() {
   const { inMemory } = await connectDB();
@@ -23,6 +24,8 @@ async function main() {
         `${stats.flags.critical} critical medication flag(s)`
     );
   }
+
+  await ensureDoctors();
 
   const app = createApp();
   const httpServer = createServer(app);

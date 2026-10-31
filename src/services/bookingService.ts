@@ -1,4 +1,6 @@
 import type { Request } from 'express';
+import jwt from 'jsonwebtoken';
+import { env } from '../config/env.js';
 import { Appointment } from '../models/Appointment.js';
 import { Patient } from '../models/Patient.js';
 import { User } from '../models/User.js';
@@ -115,7 +117,22 @@ export async function createPublicBooking(
 
   let patient;
 
-  if (input.isNewPatient) {
+  // If booked from an active patient portal session, identify the patient directly
+  const authHeader = req?.headers?.authorization;
+  if (authHeader?.startsWith('Bearer ')) {
+    try {
+      const token = authHeader.slice(7);
+      const payload = jwt.verify(token, env.JWT_SECRET) as jwt.JwtPayload;
+      if (payload.scope === 'portal' && payload.patientRef) {
+        patient = await Patient.findById(payload.patientRef);
+      }
+    } catch {
+      /* ignore invalid token and fall back to input credentials */
+    }
+  }
+
+  if (!patient) {
+    if (input.isNewPatient) {
     const { firstName, lastName, phone } = input;
     if (!firstName || !lastName || !input.dateOfBirth || !phone) {
       throw badRequest('Name, date of birth and phone number are required');
@@ -148,10 +165,11 @@ export async function createPublicBooking(
     patient = await findPatientByIdentifier(input.identifier, input.dateOfBirth);
     if (!patient) throw badRequest(LOOKUP_FAILED);
   }
+  }
 
   // Re-check the slot against the database rather than trusting that the one
   // the browser saw free a minute ago still is.
-  const slotMinutes = doctor.doctorProfile?.slotMinutes || 30;
+  const slotMinutes = doctor.doctorProfile?.slotMinutes || 25;
   const taken = await Appointment.findOne({
     doctorId: doctor._id,
     scheduledDate,
@@ -225,7 +243,9 @@ export async function freeSlots(
 
   const profile = doctor.doctorProfile ?? ({} as NonNullable<typeof doctor.doctorProfile>);
   const days = profile.availableDays?.length ? profile.availableDays : [1, 2, 3, 4, 5];
-  const slotMinutes = profile.slotMinutes || 30;
+  const slotMinutes = profile.slotMinutes || 25;
+  const bufferMinutes = profile.bufferMinutes ?? 5;
+  const slotStep = slotMinutes + bufferMinutes;
 
   const start = new Date(date);
   start.setHours(0, 0, 0, 0);
@@ -245,19 +265,23 @@ export async function freeSlots(
     .lean();
 
   const open = toMinutes(profile.clinicStart || '09:00');
-  const close = toMinutes(profile.clinicEnd || '17:00');
+  let close = toMinutes(profile.clinicEnd || '17:00');
+  if (close <= open) {
+    close += 24 * 60;
+  }
   const now = Date.now();
 
   const slots: { time: string; available: boolean }[] = [];
-  for (let m = open; m + slotMinutes <= close; m += slotMinutes) {
+  for (let m = open; m + slotMinutes <= close; m += slotStep) {
+    const timeStr = toHHMM(m % 1440);
     const clash = booked.some((a) => {
       const s = toMinutes(a.scheduledTime);
-      return m < s + (a.duration ?? slotMinutes) && s < m + slotMinutes;
+      return (m % 1440) < s + (a.duration ?? slotMinutes) && s < (m % 1440) + slotMinutes;
     });
     // A slot earlier today has already gone, so never offer it.
     const slotAt = new Date(start);
     slotAt.setMinutes(m);
-    slots.push({ time: toHHMM(m), available: !clash && slotAt.getTime() > now });
+    slots.push({ time: timeStr, available: !clash && slotAt.getTime() > now });
   }
   return { slots };
 }

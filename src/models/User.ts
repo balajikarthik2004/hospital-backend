@@ -16,7 +16,7 @@ const userSchema = new Schema(
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     passwordHash: { type: String, required: true, select: false },
     firstName: { type: String, required: true },
-    lastName: { type: String, required: true },
+    lastName: { type: String, default: '' },
     role: { type: String, enum: ROLES, required: true },
     department: { type: String, default: '' },
     specialization: { type: String, default: null },
@@ -52,7 +52,8 @@ const userSchema = new Schema(
       /** Clinic hours, 24h "HH:MM". */
       clinicStart: { type: String, default: '09:00' },
       clinicEnd: { type: String, default: '17:00' },
-      slotMinutes: { type: Number, default: 30 },
+      slotMinutes: { type: Number, default: 25 },
+      bufferMinutes: { type: Number, default: 5 },
       isBookable: { type: Boolean, default: false },
     },
   },
@@ -60,7 +61,7 @@ const userSchema = new Schema(
 );
 
 userSchema.virtual('fullName').get(function (this: { firstName: string; lastName: string }) {
-  return `${this.firstName} ${this.lastName}`;
+  return [this.firstName, this.lastName].filter(Boolean).join(' ');
 });
 
 userSchema.set('toJSON', { virtuals: true });

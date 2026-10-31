@@ -28,6 +28,7 @@ interface SeedUser {
     clinicStart: string;
     clinicEnd: string;
     slotMinutes: number;
+    bufferMinutes?: number;
     isBookable: boolean;
   };
 }
@@ -50,7 +51,8 @@ function doctor(
     availableDays: [1, 2, 3, 4, 5],
     clinicStart: '09:00',
     clinicEnd: '17:00',
-    slotMinutes: 30,
+    slotMinutes: 25,
+    bufferMinutes: 5,
     isBookable: true,
     ...opts,
   };
@@ -58,7 +60,76 @@ function doctor(
 
 /** 32 staff + patient logins. The first six are the documented demo accounts. */
 export const USERS: SeedUser[] = [
-  // ─── Physicians (4) ───
+  // ─── Physicians ───
+  {
+    email: 'dr.chandupriya@safedischarge.demo',
+    firstName: 'Naraginti Chandu',
+    lastName: 'Priya',
+    role: 'physician',
+    department: 'Gynaecology',
+    specialization: 'Obstetrics & Gynaecology',
+    licenseNumber: 'MD-884220',
+    phone: '555-0120',
+    doctorProfile: doctor(
+      'gynaecology',
+      'MBBS, MS (Obstetrics & Gynaecology)',
+      12,
+      'Obstetrician and gynaecologist specializing in women’s wellness, high-risk pregnancy, and reproductive health.',
+      {
+        consultationFee: 700,
+        availableDays: [1, 2, 3, 4, 5, 6],
+        clinicStart: '10:00',
+        clinicEnd: '17:00',
+        slotMinutes: 25,
+      }
+    ),
+  },
+  {
+    email: 'dr.balaji@safedischarge.demo',
+    firstName: 'Balaji',
+    lastName: 'Krishnan',
+    role: 'physician',
+    department: 'Neurology',
+    specialization: 'Neurology',
+    licenseNumber: 'MD-884221',
+    phone: '555-0121',
+    doctorProfile: doctor(
+      'neurology',
+      'MBBS, MD, DM (Neurology)',
+      15,
+      'Consultant neurologist specializing in comprehensive stroke care, migraine management, and epilepsy.',
+      {
+        consultationFee: 850,
+        availableDays: [1, 2, 3, 4, 5, 6],
+        clinicStart: '10:00',
+        clinicEnd: '17:00',
+        slotMinutes: 25,
+      }
+    ),
+  },
+  {
+    email: 'dr.sainanthan@safedischarge.demo',
+    firstName: 'Sainanthan',
+    lastName: '',
+    role: 'physician',
+    department: 'Cardiology',
+    specialization: 'Cardiology',
+    licenseNumber: 'MD-884222',
+    phone: '555-0122',
+    doctorProfile: doctor(
+      'cardiology',
+      'MBBS, MD, DM (Cardiology)',
+      16,
+      'Senior interventional cardiologist available for emergency chest pain, heart failure management, and night clinic consultations.',
+      {
+        consultationFee: 800,
+        availableDays: [1, 2, 3, 4, 5, 6, 0],
+        clinicStart: '17:00',
+        clinicEnd: '03:00',
+        slotMinutes: 25,
+      }
+    ),
+  },
   {
     email: 'dr.sharma@safedischarge.demo',
     firstName: 'Ananya',

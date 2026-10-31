@@ -14,7 +14,8 @@ const POPULATE = [
 /** Clinic hours used for slot generation. */
 const DAY_START = 9 * 60;
 const DAY_END = 17 * 60;
-const SLOT_MINUTES = 30;
+const SLOT_MINUTES = 25;
+const BUFFER_MINUTES = 5;
 
 const toMinutes = (hhmm: string) => {
   const [h, m] = hhmm.split(':').map(Number);
@@ -26,7 +27,7 @@ const toHHMM = (mins: number) =>
 export const createAppointment = asyncHandler(async (req: Request, res: Response) => {
   const body = req.body as Record<string, any>;
 
-  const conflict = await findConflict(body.doctorId, body.scheduledDate, body.scheduledTime, body.duration ?? 30);
+  const conflict = await findConflict(body.doctorId, body.scheduledDate, body.scheduledTime, body.duration ?? 25);
   if (conflict) {
     throw badRequest(
       `That doctor already has an appointment at ${conflict.scheduledTime} on that day (${conflict.appointmentId})`
@@ -79,7 +80,7 @@ async function findConflict(
   return (
     sameDay.find((a) => {
       const s = toMinutes(a.scheduledTime);
-      return newStart < s + (a.duration ?? 30) && s < newEnd;
+      return newStart < s + (a.duration ?? 25) && s < newEnd;
     }) ?? null
   );
 }
@@ -161,7 +162,10 @@ export const cancelAppointment = asyncHandler(async (req: Request, res: Response
 
 export const doctorSlots = asyncHandler(async (req: Request, res: Response) => {
   const date = req.query.date ? new Date(String(req.query.date)) : new Date();
-  const duration = Number(req.query.duration) || SLOT_MINUTES;
+  const doctor = await User.findById(req.params.doctorId).lean();
+  const duration = Number(req.query.duration) || doctor?.doctorProfile?.slotMinutes || SLOT_MINUTES;
+  const buffer = doctor?.doctorProfile?.bufferMinutes ?? BUFFER_MINUTES;
+  const slotStep = duration + buffer;
 
   const start = new Date(date);
   start.setHours(0, 0, 0, 0);
@@ -174,14 +178,21 @@ export const doctorSlots = asyncHandler(async (req: Request, res: Response) => {
     status: { $in: ['scheduled', 'confirmed'] },
   }).lean();
 
+  const open = toMinutes(doctor?.doctorProfile?.clinicStart || '09:00');
+  let close = toMinutes(doctor?.doctorProfile?.clinicEnd || '17:00');
+  if (close <= open) {
+    close += 24 * 60;
+  }
+
   const slots: { time: string; available: boolean; appointmentId?: string }[] = [];
-  for (let m = DAY_START; m + duration <= DAY_END; m += SLOT_MINUTES) {
+  for (let m = open; m + duration <= close; m += slotStep) {
+    const timeStr = toHHMM(m % 1440);
     const clash = booked.find((a) => {
       const s = toMinutes(a.scheduledTime);
-      return m < s + (a.duration ?? 30) && s < m + duration;
+      return (m % 1440) < s + (a.duration ?? duration) && s < (m % 1440) + duration;
     });
     slots.push({
-      time: toHHMM(m),
+      time: timeStr,
       available: !clash,
       appointmentId: clash?.appointmentId,
     });
@@ -220,7 +231,7 @@ export const doctorWorkload = asyncHandler(async (req: Request, res: Response) =
         ...d,
         fullName: `Dr. ${d.firstName} ${d.lastName}`,
         weekAppointments: mine.length,
-        weekMinutes: mine.reduce((s, a) => s + (a.duration ?? 30), 0),
+        weekMinutes: mine.reduce((s, a) => s + (a.duration ?? 25), 0),
         byDay: Array.from({ length: 7 }, (_, i) => {
           const day = new Date(from);
           day.setDate(day.getDate() + i);

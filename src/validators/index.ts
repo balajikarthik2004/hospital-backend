@@ -444,6 +444,7 @@ export const doctorProfileSchema = z.object({
   availableDays: z.array(z.coerce.number().int().min(0).max(6)).max(7).optional(),
   clinicStart: z.string().regex(/^\d{2}:\d{2}$/, 'Expected HH:MM').optional(),
   clinicEnd: z.string().regex(/^\d{2}:\d{2}$/, 'Expected HH:MM').optional(),
-  slotMinutes: z.coerce.number().int().min(5).max(120).optional(),
+  slotMinutes: z.coerce.number().int().min(5).max(120).optional().default(25),
+  bufferMinutes: z.coerce.number().int().min(0).max(60).optional().default(5),
   isBookable: z.boolean().optional().default(false),
 });

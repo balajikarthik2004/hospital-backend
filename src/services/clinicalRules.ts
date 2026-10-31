@@ -1,12 +1,42 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const rulesDir = resolve(here, '../../../agents/rules');
+function resolveRulesDir(): string {
+  const candidates = [
+    process.env.RULES_DIR,
+    resolve(here, '../../../hospital-agent/rules'),
+    resolve(here, '../../../agents/rules'),
+    resolve(here, '../../hospital-agent/rules'),
+    resolve(here, '../../agents/rules'),
+    resolve(here, '../hospital-agent/rules'),
+    resolve(here, '../agents/rules'),
+    resolve(process.cwd(), 'hospital-agent/rules'),
+    resolve(process.cwd(), '../hospital-agent/rules'),
+    resolve(process.cwd(), 'agents/rules'),
+    resolve(process.cwd(), '../agents/rules'),
+  ].filter((p): p is string => Boolean(p));
+
+  for (const dir of candidates) {
+    if (existsSync(resolve(dir, 'drug_interactions.json'))) {
+      return dir;
+    }
+  }
+
+  return resolve(here, '../../../hospital-agent/rules');
+}
+
+const rulesDir = resolveRulesDir();
 
 function load<T>(file: string): T {
-  return JSON.parse(readFileSync(resolve(rulesDir, file), 'utf8')) as T;
+  const filePath = resolve(rulesDir, file);
+  if (!existsSync(filePath)) {
+    throw new Error(
+      `Clinical rules file "${file}" not found in "${rulesDir}". Please ensure "hospital-agent/rules/${file}" exists or set the RULES_DIR environment variable.`
+    );
+  }
+  return JSON.parse(readFileSync(filePath, 'utf8')) as T;
 }
 
 export interface InteractionRule {

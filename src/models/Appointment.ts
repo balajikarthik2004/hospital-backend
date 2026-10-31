@@ -26,7 +26,7 @@ const appointmentSchema = new Schema(
     specialty: { type: String, default: '' },
     scheduledDate: { type: Date, required: true },
     scheduledTime: { type: String, required: true },
-    duration: { type: Number, default: 30 },
+    duration: { type: Number, default: 25 },
     location: { type: String, default: '' },
     status: { type: String, enum: APPOINTMENT_STATUSES, default: 'scheduled' },
     reason: { type: String, default: '' },
