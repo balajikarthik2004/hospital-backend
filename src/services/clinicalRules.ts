@@ -8,6 +8,7 @@ function resolveRulesDir(): string {
     process.env.RULES_DIR,
     resolve(here, '../../../hospital-agent/rules'),
     resolve(here, '../../../agents/rules'),
+    resolve(here, '../../../agent/rules'),
     resolve(here, '../../hospital-agent/rules'),
     resolve(here, '../../agents/rules'),
     resolve(here, '../hospital-agent/rules'),
@@ -16,6 +17,7 @@ function resolveRulesDir(): string {
     resolve(process.cwd(), '../hospital-agent/rules'),
     resolve(process.cwd(), 'agents/rules'),
     resolve(process.cwd(), '../agents/rules'),
+    resolve(process.cwd(), '../agent/rules'),
   ].filter((p): p is string => Boolean(p));
 
   for (const dir of candidates) {
