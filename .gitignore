@@ -1,0 +1,43 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+*.tsbuildinfo
+
+# The bundled local MongoDB's data directory.
+#
+# config/db.ts falls back to mongodb-memory-server when MONGODB_URI is
+# unreachable, and points it at this folder so seeded data survives a
+# restart. It is a real WiredTiger database — hundreds of megabytes, rewritten
+# constantly, and holding a lock file that the running mongod keeps open, so
+# `git add` on it fails with "Permission denied" even when nothing else is
+# wrong. It is local scratch state and must never be committed.
+.mongodb-data/
+.mongodb-binaries/
+
+# Local environment. .env.example is committed; real values are not.
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Test and coverage output
+coverage/
+.nyc_output/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Editor and OS noise
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/*
+!.vscode/extensions.json
