@@ -1,4 +1,5 @@
-import { mkdirSync } from 'node:fs';
+import { mkdirSync, readFileSync } from 'node:fs';
+import { getServers, setServers } from 'node:dns';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import mongoose from 'mongoose';
@@ -21,20 +22,53 @@ export async function connectDB(): Promise<{ uri: string; inMemory: boolean }> {
 
   const atlas = /mongodb\+srv:\/\//.test(env.MONGODB_URI);
 
-  try {
+  const connect = () =>
     // 3s was too tight to be a fair test of Atlas. A first connection to a
     // shared-tier cluster has to do an SRV lookup, a TLS handshake and
     // sometimes wake the cluster, which routinely runs past three seconds on
     // a normal connection — so the old timeout could report "unreachable"
     // for a cluster that was merely slow, and silently fall through to a
     // different database. A local mongod still answers in milliseconds.
-    await mongoose.connect(env.MONGODB_URI, {
+    mongoose.connect(env.MONGODB_URI, {
       serverSelectionTimeoutMS: atlas ? 15_000 : 3000,
     });
+
+  try {
+    await connect();
     console.log(`[db] connected to ${redact(env.MONGODB_URI)}`);
     return { uri: env.MONGODB_URI, inMemory: false };
   } catch (err) {
-    const reason = (err as Error).message;
+    let reason = (err as Error).message;
+
+    /* A `mongodb+srv://` URI is resolved by asking DNS for an SRV record,
+       and plenty of office and VPN resolvers answer ordinary A queries
+       while refusing SRV outright — which surfaces here as
+       "querySrv ECONNREFUSED" and makes a perfectly healthy cluster look
+       unreachable. (The giveaway is that `nslookup -type=SRV` on the same
+       machine succeeds: the system resolver is fine, the one Node was
+       handed is not.)
+
+       So: on that specific failure, ask a public resolver instead and try
+       once more. This is narrow on purpose — it runs only for an SRV error,
+       only once, and changes nothing when DNS was never the problem. */
+    if (/querySrv|ESERVFAIL|ECONNREFUSED/i.test(reason) && atlas) {
+      try {
+        const current = getServers();
+        const publicDns = ['1.1.1.1', '8.8.8.8'];
+        if (!publicDns.some((s) => current.includes(s))) {
+          console.warn(
+            `[db] SRV lookup failed via the system resolver (${current.join(', ') || 'default'}) — ` +
+              `retrying through ${publicDns.join(' / ')}`
+          );
+          setServers([...publicDns, ...current]);
+          await connect();
+          console.log(`[db] connected to ${redact(env.MONGODB_URI)} (public DNS)`);
+          return { uri: env.MONGODB_URI, inMemory: false };
+        }
+      } catch (retryErr) {
+        reason = (retryErr as Error).message;
+      }
+    }
 
     // Falling back swaps the database out from under the application. That
     // is a reasonable convenience on a fresh machine with no mongod, and a
@@ -75,6 +109,7 @@ export async function connectDB(): Promise<{ uri: string; inMemory: boolean }> {
   }
 
   mkdirSync(FALLBACK_DB_PATH, { recursive: true });
+  assertDataDirFree();
 
   const server = await mod.MongoMemoryServer.create({
     instance: {
@@ -89,6 +124,49 @@ export async function connectDB(): Promise<{ uri: string; inMemory: boolean }> {
   await mongoose.connect(uri);
   console.log(`[db] bundled MongoDB ready (data in ${FALLBACK_DB_PATH})`);
   return { uri, inMemory: true };
+}
+
+/**
+ * Refuse to start a second mongod on a data directory another one already
+ * owns.
+ *
+ * Two copies of `npm run dev` is the normal way to hit this, and the failure
+ * it produces unaided is genuinely baffling: mongod starts, finds the lock
+ * held, logs its shutdown over several lines, and mongodb-memory-server's
+ * log reader — which parses each chunk as one JSON object — dies on the
+ * second line with "Unexpected non-whitespace character after JSON". The
+ * stack is entirely inside node_modules and says nothing about locks, so the
+ * obvious reading is a corrupt database. It is not; it is just already open.
+ */
+function assertDataDirFree(): void {
+  const lockFile = resolve(FALLBACK_DB_PATH, 'mongod.lock');
+  let pid: number;
+  try {
+    // An empty lock file is what a clean shutdown leaves behind.
+    const raw = readFileSync(lockFile, 'utf8').trim();
+    if (!raw) return;
+    pid = Number(raw);
+    if (!Number.isInteger(pid) || pid <= 0) return;
+  } catch {
+    return; // No lock file at all: nothing is holding the directory.
+  }
+
+  try {
+    // Signal 0 tests for the process without touching it. It throws ESRCH
+    // when nothing is there, which means the lock is stale and mongod will
+    // clear it itself.
+    process.kill(pid, 0);
+  } catch {
+    return;
+  }
+
+  throw new Error(
+    `[db] ${FALLBACK_DB_PATH} is already in use by mongod (pid ${pid}).\n` +
+      '[db] Another copy of the server is almost certainly still running — ' +
+      'two cannot share the bundled database.\n' +
+      '[db] Stop the other one and start again, or point MONGODB_URI at a ' +
+      'reachable MongoDB so neither needs the fallback.'
+  );
 }
 
 export async function disconnectDB(): Promise<void> {
