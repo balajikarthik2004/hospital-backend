@@ -14,6 +14,15 @@ export const PERMISSIONS = {
   'vitals:record': ['nurse', 'physician'],
   'notes:write': ['nurse', 'physician', 'pharmacist'],
   'medication:modify': ['physician', 'pharmacist'],
+  /**
+   * Writing a prescription is a prescribing act, so it is the doctor's alone.
+   * A pharmacist may refuse, query or annotate one, but may not author it.
+   */
+  'prescription:write': ['physician'],
+  /** Handing medicine over the counter. The pharmacy's act, not the ward's. */
+  'prescription:dispense': ['pharmacist', 'admin'],
+  /** Seeing the queue and the detail — everyone clinical who may need to. */
+  'prescription:view': ['physician', 'pharmacist', 'nurse', 'admin', 'care_coordinator'],
   'discharge:initiate': ['physician'],
   'discharge:review-medication': ['physician', 'pharmacist'],
   'discharge:approve-summary': ['physician'],

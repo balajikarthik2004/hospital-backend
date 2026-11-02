@@ -3,21 +3,25 @@ import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 
 const here = dirname(fileURLToPath(import.meta.url));
+
+/**
+ * Locates the clinical rules this service is driven by.
+ *
+ * These files used to live in the Python sidecar and were read across the
+ * project boundary. They are now owned by this backend (`hospital-backend/
+ * rules`), because the rules engine that reads them runs here: a deterministic
+ * clinical check should not stop working because a sibling folder moved.
+ *
+ * The candidates cover running from source via tsx (`src/services`) and from
+ * the compiled output (`dist/src/services`). `RULES_DIR` overrides everything.
+ */
 function resolveRulesDir(): string {
   const candidates = [
     process.env.RULES_DIR,
-    resolve(here, '../../../hospital-agent/rules'),
-    resolve(here, '../../../agents/rules'),
-    resolve(here, '../../../agent/rules'),
-    resolve(here, '../../hospital-agent/rules'),
-    resolve(here, '../../agents/rules'),
-    resolve(here, '../hospital-agent/rules'),
-    resolve(here, '../agents/rules'),
-    resolve(process.cwd(), 'hospital-agent/rules'),
-    resolve(process.cwd(), '../hospital-agent/rules'),
-    resolve(process.cwd(), 'agents/rules'),
-    resolve(process.cwd(), '../agents/rules'),
-    resolve(process.cwd(), '../agent/rules'),
+    resolve(here, '../../rules'), // src/services -> hospital-backend/rules
+    resolve(here, '../../../rules'), // dist/src/services -> hospital-backend/rules
+    resolve(process.cwd(), 'rules'),
+    resolve(process.cwd(), 'hospital-backend/rules'),
   ].filter((p): p is string => Boolean(p));
 
   for (const dir of candidates) {
@@ -26,7 +30,7 @@ function resolveRulesDir(): string {
     }
   }
 
-  return resolve(here, '../../../hospital-agent/rules');
+  return resolve(here, '../../rules');
 }
 
 const rulesDir = resolveRulesDir();
@@ -35,7 +39,7 @@ function load<T>(file: string): T {
   const filePath = resolve(rulesDir, file);
   if (!existsSync(filePath)) {
     throw new Error(
-      `Clinical rules file "${file}" not found in "${rulesDir}". Please ensure "hospital-agent/rules/${file}" exists or set the RULES_DIR environment variable.`
+      `Clinical rules file "${file}" not found in "${rulesDir}". Please ensure "hospital-backend/rules/${file}" exists or set the RULES_DIR environment variable.`
     );
   }
   return JSON.parse(readFileSync(filePath, 'utf8')) as T;

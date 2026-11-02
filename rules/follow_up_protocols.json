@@ -1,0 +1,350 @@
+{
+  "_comment": "Demo-only follow-up protocols keyed by ICD-10 prefix and by diagnosis keyword. medication_triggered entries carry a `subject`: the trigger is skipped only when an existing recommendation already mentions that subject.",
+  "by_icd_prefix": {
+    "I50": {
+      "label": "Heart failure",
+      "recommendations": [
+        {
+          "type": "specialist",
+          "specialty": "Cardiology",
+          "description": "Cardiology follow-up to reassess volume status and titrate guideline-directed medical therapy",
+          "dueInDays": 7,
+          "timeframe": "within 7 days",
+          "priority": "required"
+        },
+        {
+          "type": "lab_work",
+          "specialty": "Laboratory",
+          "description": "Basic metabolic panel (BMP) to check potassium and renal function after diuresis",
+          "dueInDays": 3,
+          "timeframe": "within 3 days",
+          "priority": "required"
+        },
+        {
+          "type": "pcp_visit",
+          "specialty": "Internal Medicine",
+          "description": "Primary care visit for medication review and daily-weight monitoring plan",
+          "dueInDays": 14,
+          "timeframe": "within 14 days",
+          "priority": "recommended"
+        },
+        {
+          "type": "home_health",
+          "specialty": "Home Health",
+          "description": "Home health nurse visit for weight log, diet education and symptom checks",
+          "dueInDays": 5,
+          "timeframe": "within 5 days",
+          "priority": "recommended"
+        }
+      ]
+    },
+    "J18": {
+      "label": "Pneumonia",
+      "recommendations": [
+        {
+          "type": "pcp_visit",
+          "specialty": "Internal Medicine",
+          "description": "Primary care visit to confirm clinical resolution and complete the antibiotic course",
+          "dueInDays": 7,
+          "timeframe": "within 7 days",
+          "priority": "required"
+        },
+        {
+          "type": "lab_work",
+          "specialty": "Radiology",
+          "description": "Repeat chest radiograph to document radiographic resolution",
+          "dueInDays": 42,
+          "timeframe": "in 6 weeks",
+          "priority": "recommended"
+        },
+        {
+          "type": "specialist",
+          "specialty": "Pulmonology",
+          "description": "Pulmonology review if symptoms persist beyond the antibiotic course",
+          "dueInDays": 30,
+          "timeframe": "within 30 days",
+          "priority": "optional"
+        }
+      ]
+    },
+    "J44": {
+      "label": "COPD exacerbation",
+      "recommendations": [
+        {
+          "type": "pcp_visit",
+          "specialty": "Internal Medicine",
+          "description": "Primary care visit to review inhaler technique and the steroid taper",
+          "dueInDays": 7,
+          "timeframe": "within 7 days",
+          "priority": "required"
+        },
+        {
+          "type": "specialist",
+          "specialty": "Pulmonology",
+          "description": "Pulmonology follow-up with spirometry",
+          "dueInDays": 30,
+          "timeframe": "within 30 days",
+          "priority": "recommended"
+        },
+        {
+          "type": "physical_therapy",
+          "specialty": "Rehabilitation",
+          "description": "Pulmonary rehabilitation referral",
+          "dueInDays": 21,
+          "timeframe": "within 3 weeks",
+          "priority": "recommended"
+        }
+      ]
+    },
+    "Z96": {
+      "label": "Joint replacement",
+      "recommendations": [
+        {
+          "type": "specialist",
+          "specialty": "Orthopedics",
+          "description": "Orthopedic surgeon review with wound check and radiographs",
+          "dueInDays": 14,
+          "timeframe": "within 14 days",
+          "priority": "required"
+        },
+        {
+          "type": "physical_therapy",
+          "specialty": "Rehabilitation",
+          "description": "Outpatient physical therapy, three sessions per week",
+          "dueInDays": 3,
+          "timeframe": "within 3 days",
+          "priority": "required"
+        },
+        {
+          "type": "dme",
+          "specialty": "Durable Medical Equipment",
+          "description": "Walker and raised toilet seat delivered before discharge",
+          "dueInDays": 1,
+          "timeframe": "before discharge",
+          "priority": "required"
+        },
+        {
+          "type": "pcp_visit",
+          "specialty": "Internal Medicine",
+          "description": "Primary care visit for VTE prophylaxis review",
+          "dueInDays": 14,
+          "timeframe": "within 14 days",
+          "priority": "recommended"
+        }
+      ]
+    },
+    "E11": {
+      "label": "Type 2 diabetes mellitus",
+      "recommendations": [
+        {
+          "type": "pcp_visit",
+          "specialty": "Internal Medicine",
+          "description": "Primary care visit for glycaemic review and insulin titration",
+          "dueInDays": 10,
+          "timeframe": "within 10 days",
+          "priority": "required"
+        },
+        {
+          "type": "lab_work",
+          "specialty": "Laboratory",
+          "description": "HbA1c and basic metabolic panel",
+          "dueInDays": 14,
+          "timeframe": "within 14 days",
+          "priority": "required"
+        },
+        {
+          "type": "specialist",
+          "specialty": "Endocrinology",
+          "description": "Endocrinology referral for insulin regimen optimisation",
+          "dueInDays": 30,
+          "timeframe": "within 30 days",
+          "priority": "recommended"
+        }
+      ]
+    },
+    "I21": {
+      "label": "Acute myocardial infarction",
+      "recommendations": [
+        {
+          "type": "specialist",
+          "specialty": "Cardiology",
+          "description": "Cardiology follow-up with dual antiplatelet therapy review",
+          "dueInDays": 7,
+          "timeframe": "within 7 days",
+          "priority": "required"
+        },
+        {
+          "type": "physical_therapy",
+          "specialty": "Rehabilitation",
+          "description": "Cardiac rehabilitation enrolment",
+          "dueInDays": 21,
+          "timeframe": "within 3 weeks",
+          "priority": "required"
+        },
+        {
+          "type": "lab_work",
+          "specialty": "Laboratory",
+          "description": "Lipid panel and liver function tests on statin therapy",
+          "dueInDays": 42,
+          "timeframe": "in 6 weeks",
+          "priority": "recommended"
+        }
+      ]
+    },
+    "N17": {
+      "label": "Acute kidney injury",
+      "recommendations": [
+        {
+          "type": "lab_work",
+          "specialty": "Laboratory",
+          "description": "Basic metabolic panel to confirm creatinine recovery",
+          "dueInDays": 3,
+          "timeframe": "within 3 days",
+          "priority": "required"
+        },
+        {
+          "type": "specialist",
+          "specialty": "Nephrology",
+          "description": "Nephrology review if creatinine has not returned to baseline",
+          "dueInDays": 14,
+          "timeframe": "within 14 days",
+          "priority": "recommended"
+        }
+      ]
+    },
+    "K92": {
+      "label": "Gastrointestinal haemorrhage",
+      "recommendations": [
+        {
+          "type": "specialist",
+          "specialty": "Gastroenterology",
+          "description": "Gastroenterology follow-up with repeat endoscopy planning",
+          "dueInDays": 14,
+          "timeframe": "within 14 days",
+          "priority": "required"
+        },
+        {
+          "type": "lab_work",
+          "specialty": "Laboratory",
+          "description": "Complete blood count to confirm haemoglobin stability",
+          "dueInDays": 7,
+          "timeframe": "within 7 days",
+          "priority": "required"
+        }
+      ]
+    },
+    "A41": {
+      "label": "Sepsis",
+      "recommendations": [
+        {
+          "type": "pcp_visit",
+          "specialty": "Internal Medicine",
+          "description": "Primary care visit for post-sepsis reassessment and functional review",
+          "dueInDays": 7,
+          "timeframe": "within 7 days",
+          "priority": "required"
+        },
+        {
+          "type": "lab_work",
+          "specialty": "Laboratory",
+          "description": "Complete blood count and metabolic panel",
+          "dueInDays": 7,
+          "timeframe": "within 7 days",
+          "priority": "required"
+        },
+        {
+          "type": "home_health",
+          "specialty": "Home Health",
+          "description": "Home health assessment for deconditioning",
+          "dueInDays": 5,
+          "timeframe": "within 5 days",
+          "priority": "recommended"
+        }
+      ]
+    }
+  },
+  "by_keyword": {
+    "heart failure": "I50",
+    "chf": "I50",
+    "decompensated": "I50",
+    "pneumonia": "J18",
+    "copd": "J44",
+    "hip replacement": "Z96",
+    "knee replacement": "Z96",
+    "arthroplasty": "Z96",
+    "diabetes": "E11",
+    "diabetic": "E11",
+    "myocardial infarction": "I21",
+    "nstemi": "I21",
+    "stemi": "I21",
+    "kidney injury": "N17",
+    "renal failure": "N17",
+    "gi bleed": "K92",
+    "gastrointestinal bleed": "K92",
+    "sepsis": "A41",
+    "septic": "A41"
+  },
+  "default": {
+    "label": "General medical admission",
+    "recommendations": [
+      {
+        "type": "pcp_visit",
+        "specialty": "Internal Medicine",
+        "description": "Primary care follow-up to review the hospital course and reconcile medications",
+        "dueInDays": 14,
+        "timeframe": "within 14 days",
+        "priority": "required"
+      },
+      {
+        "type": "lab_work",
+        "specialty": "Laboratory",
+        "description": "Basic metabolic panel and complete blood count",
+        "dueInDays": 10,
+        "timeframe": "within 10 days",
+        "priority": "recommended"
+      }
+    ]
+  },
+  "medication_triggered": [
+    {
+      "when_drug_class": "Anticoagulant",
+      "type": "lab_work",
+      "specialty": "Laboratory",
+      "description": "INR / anticoagulation monitoring visit",
+      "dueInDays": 5,
+      "timeframe": "within 5 days",
+      "priority": "required",
+      "subject": "INR"
+    },
+    {
+      "when_drug_class": "Loop diuretic",
+      "type": "lab_work",
+      "specialty": "Laboratory",
+      "description": "Electrolytes and renal function on diuretic therapy",
+      "dueInDays": 7,
+      "timeframe": "within 7 days",
+      "priority": "required",
+      "subject": "potassium"
+    },
+    {
+      "when_drug_class": "Opioid analgesic",
+      "type": "pcp_visit",
+      "specialty": "Internal Medicine",
+      "description": "Opioid taper review and bowel regimen check",
+      "dueInDays": 10,
+      "timeframe": "within 10 days",
+      "priority": "required",
+      "subject": "opioid"
+    },
+    {
+      "when_drug_class": "Long-acting insulin",
+      "type": "pcp_visit",
+      "specialty": "Internal Medicine",
+      "description": "Glucose log review and insulin titration",
+      "dueInDays": 10,
+      "timeframe": "within 10 days",
+      "priority": "required",
+      "subject": "insulin"
+    }
+  ]
+}

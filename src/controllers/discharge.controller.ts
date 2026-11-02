@@ -13,7 +13,6 @@ import {
   completionBlockers,
   processPackage,
 } from '../services/dischargeService.js';
-import { agentServiceHealthy } from '../services/agentBridgeService.js';
 
 const POPULATE = [
   { path: 'patientId', select: 'patientId demographics status medicalHistory' },
@@ -134,7 +133,9 @@ export const packageStatus = asyncHandler(async (req: Request, res: Response) =>
       followUpPlan: pkg.followUpPlan?.status,
       patientEducation: pkg.patientEducation?.status,
     },
-    agentServiceOnline: await agentServiceHealthy(),
+    // The discharge DAG runs in this process, so it is online whenever the
+    // API is. There is no sidecar left to probe.
+    agentServiceOnline: true,
   });
 });
 

@@ -9,6 +9,7 @@ import patientRoutes from './routes/patient.routes.js';
 import admissionRoutes from './routes/admission.routes.js';
 import vitalRoutes from './routes/vital.routes.js';
 import medicationRoutes from './routes/medication.routes.js';
+import prescriptionRoutes from './routes/prescription.routes.js';
 import appointmentRoutes from './routes/appointment.routes.js';
 import bedRoutes from './routes/bed.routes.js';
 import dischargeRoutes from './routes/discharge.routes.js';
@@ -45,6 +46,8 @@ export function createApp() {
   app.use('/api/admissions', admissionRoutes);
   app.use('/api/vitals', vitalRoutes);
   app.use('/api/medications', medicationRoutes);
+  // Prescribing and the in-house pharmacy counter.
+  app.use('/api/prescriptions', prescriptionRoutes);
   app.use('/api/appointments', appointmentRoutes);
   app.use('/api/beds', bedRoutes);
   app.use('/api/discharge', dischargeRoutes);

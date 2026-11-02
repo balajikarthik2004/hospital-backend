@@ -1,0 +1,282 @@
+{
+  "_comment": "Simplified, demo-only interaction knowledge base. NOT a clinical reference. Generic names are lowercase.",
+  "interactions": [
+    {
+      "drugA": "warfarin",
+      "drugB": "aspirin",
+      "severity": "critical",
+      "mechanism": "Additive antiplatelet and anticoagulant effect",
+      "effect": "Markedly increased risk of major bleeding, including GI and intracranial haemorrhage",
+      "recommendation": "Confirm the combination is intentional. If continued, document the indication, target INR and a bleeding-precaution plan, and arrange INR recheck within 3-5 days."
+    },
+    {
+      "drugA": "warfarin",
+      "drugB": "ibuprofen",
+      "severity": "critical",
+      "mechanism": "NSAID platelet inhibition plus gastric mucosal injury on top of anticoagulation",
+      "effect": "High risk of gastrointestinal bleeding",
+      "recommendation": "Prefer acetaminophen for analgesia. If an NSAID is unavoidable, add gastroprotection and recheck INR."
+    },
+    {
+      "drugA": "warfarin",
+      "drugB": "trimethoprim-sulfamethoxazole",
+      "severity": "high",
+      "mechanism": "CYP2C9 inhibition increases warfarin exposure",
+      "effect": "INR elevation and bleeding risk",
+      "recommendation": "Recheck INR within 3 days of starting or stopping; consider empiric warfarin dose reduction."
+    },
+    {
+      "drugA": "lisinopril",
+      "drugB": "spironolactone",
+      "severity": "high",
+      "mechanism": "Dual potassium retention (ACE inhibitor plus aldosterone antagonist)",
+      "effect": "Hyperkalaemia, potentially severe",
+      "recommendation": "Check potassium and creatinine within 7 days of discharge and avoid potassium supplements unless specifically indicated."
+    },
+    {
+      "drugA": "lisinopril",
+      "drugB": "potassium chloride",
+      "severity": "high",
+      "mechanism": "ACE inhibitor reduces potassium excretion",
+      "effect": "Hyperkalaemia",
+      "recommendation": "Confirm the supplement is still required; check a basic metabolic panel within 7 days."
+    },
+    {
+      "drugA": "metformin",
+      "drugB": "furosemide",
+      "severity": "medium",
+      "mechanism": "Loop diuretic can raise metformin plasma levels and precipitate volume depletion",
+      "effect": "Increased lactic acidosis risk if renal function declines",
+      "recommendation": "Document sick-day rules and check renal function within 7-14 days."
+    },
+    {
+      "drugA": "oxycodone",
+      "drugB": "lorazepam",
+      "severity": "critical",
+      "mechanism": "Additive CNS and respiratory depression",
+      "effect": "Risk of over-sedation and respiratory arrest",
+      "recommendation": "Avoid co-prescription where possible. If both are required, use the lowest effective doses, document the rationale, and consider prescribing naloxone."
+    },
+    {
+      "drugA": "oxycodone",
+      "drugB": "gabapentin",
+      "severity": "high",
+      "mechanism": "Additive CNS depression",
+      "effect": "Sedation, respiratory depression in opioid-naive patients",
+      "recommendation": "Counsel on sedation, avoid driving, and review the need for both agents at the first follow-up."
+    },
+    {
+      "drugA": "atorvastatin",
+      "drugB": "clarithromycin",
+      "severity": "high",
+      "mechanism": "CYP3A4 inhibition raises statin exposure",
+      "effect": "Myopathy and rhabdomyolysis risk",
+      "recommendation": "Hold the statin for the duration of the macrolide course or switch to azithromycin."
+    },
+    {
+      "drugA": "digoxin",
+      "drugB": "furosemide",
+      "severity": "high",
+      "mechanism": "Diuretic-induced hypokalaemia increases myocardial sensitivity to digoxin",
+      "effect": "Digoxin toxicity and arrhythmia",
+      "recommendation": "Monitor potassium, magnesium and digoxin level; replete electrolytes."
+    },
+    {
+      "drugA": "metoprolol",
+      "drugB": "verapamil",
+      "severity": "high",
+      "mechanism": "Additive negative chronotropic and inotropic effect",
+      "effect": "Bradycardia, AV block, hypotension",
+      "recommendation": "Review the indication for dual rate control and monitor heart rate and blood pressure."
+    },
+    {
+      "drugA": "insulin glargine",
+      "drugB": "metoprolol",
+      "severity": "medium",
+      "mechanism": "Beta blockade masks adrenergic hypoglycaemia symptoms",
+      "effect": "Unrecognised hypoglycaemia",
+      "recommendation": "Counsel the patient to monitor glucose more frequently and to recognise non-adrenergic warning signs."
+    },
+    {
+      "drugA": "sertraline",
+      "drugB": "tramadol",
+      "severity": "high",
+      "mechanism": "Additive serotonergic activity",
+      "effect": "Serotonin syndrome",
+      "recommendation": "Prefer a non-serotonergic analgesic; counsel on serotonin syndrome warning signs."
+    },
+    {
+      "drugA": "amiodarone",
+      "drugB": "warfarin",
+      "severity": "high",
+      "mechanism": "CYP2C9 inhibition potentiates warfarin",
+      "effect": "INR elevation and bleeding",
+      "recommendation": "Reduce the warfarin dose empirically and recheck INR within 3-5 days."
+    },
+    {
+      "drugA": "aspirin",
+      "drugB": "clopidogrel",
+      "severity": "medium",
+      "mechanism": "Dual antiplatelet therapy",
+      "effect": "Increased bleeding risk",
+      "recommendation": "Confirm the planned duration of dual antiplatelet therapy is documented for the patient and the PCP."
+    }
+  ],
+  "allergy_cross_reactions": [
+    {
+      "allergen": "sulfa",
+      "drugs": [
+        "trimethoprim-sulfamethoxazole",
+        "sulfamethoxazole",
+        "sulfadiazine",
+        "furosemide"
+      ],
+      "severity": "critical",
+      "note": "Sulfonamide antibiotic cross-reactivity. Non-antibiotic sulfonamides such as furosemide carry a much lower risk but should be reviewed."
+    },
+    {
+      "allergen": "penicillin",
+      "drugs": [
+        "amoxicillin",
+        "amoxicillin-clavulanate",
+        "ampicillin",
+        "piperacillin-tazobactam",
+        "cefazolin",
+        "ceftriaxone"
+      ],
+      "severity": "critical",
+      "note": "Beta-lactam cross-reactivity. Cephalosporin cross-reactivity is low but non-zero."
+    },
+    {
+      "allergen": "nsaid",
+      "drugs": [
+        "ibuprofen",
+        "naproxen",
+        "ketorolac",
+        "aspirin",
+        "diclofenac"
+      ],
+      "severity": "high",
+      "note": "NSAID class cross-reactivity."
+    },
+    {
+      "allergen": "codeine",
+      "drugs": [
+        "codeine",
+        "morphine",
+        "hydrocodone",
+        "oxycodone"
+      ],
+      "severity": "high",
+      "note": "Opioid cross-sensitivity; true allergy is rare but should be verified."
+    },
+    {
+      "allergen": "statin",
+      "drugs": [
+        "atorvastatin",
+        "simvastatin",
+        "rosuvastatin",
+        "pravastatin"
+      ],
+      "severity": "medium",
+      "note": "Statin intolerance, usually myalgia rather than true allergy."
+    },
+    {
+      "allergen": "iodine",
+      "drugs": [
+        "iodinated contrast",
+        "amiodarone",
+        "povidone-iodine"
+      ],
+      "severity": "high",
+      "note": "Iodine sensitivity."
+    }
+  ],
+  "drug_classes": {
+    "lisinopril": "ACE inhibitor",
+    "enalapril": "ACE inhibitor",
+    "ramipril": "ACE inhibitor",
+    "losartan": "ARB",
+    "valsartan": "ARB",
+    "metoprolol": "Beta blocker",
+    "carvedilol": "Beta blocker",
+    "atenolol": "Beta blocker",
+    "amlodipine": "Calcium channel blocker",
+    "verapamil": "Calcium channel blocker",
+    "diltiazem": "Calcium channel blocker",
+    "furosemide": "Loop diuretic",
+    "bumetanide": "Loop diuretic",
+    "torsemide": "Loop diuretic",
+    "hydrochlorothiazide": "Thiazide diuretic",
+    "chlorthalidone": "Thiazide diuretic",
+    "spironolactone": "Aldosterone antagonist",
+    "atorvastatin": "Statin",
+    "simvastatin": "Statin",
+    "rosuvastatin": "Statin",
+    "pravastatin": "Statin",
+    "metformin": "Biguanide",
+    "glipizide": "Sulfonylurea",
+    "glyburide": "Sulfonylurea",
+    "insulin glargine": "Long-acting insulin",
+    "insulin lispro": "Rapid-acting insulin",
+    "warfarin": "Anticoagulant",
+    "apixaban": "Anticoagulant",
+    "rivaroxaban": "Anticoagulant",
+    "enoxaparin": "Anticoagulant",
+    "aspirin": "Antiplatelet",
+    "clopidogrel": "Antiplatelet",
+    "oxycodone": "Opioid analgesic",
+    "hydrocodone": "Opioid analgesic",
+    "morphine": "Opioid analgesic",
+    "tramadol": "Opioid analgesic",
+    "acetaminophen": "Non-opioid analgesic",
+    "ibuprofen": "NSAID",
+    "naproxen": "NSAID",
+    "ketorolac": "NSAID",
+    "amoxicillin": "Penicillin antibiotic",
+    "amoxicillin-clavulanate": "Penicillin antibiotic",
+    "ampicillin": "Penicillin antibiotic",
+    "ceftriaxone": "Cephalosporin antibiotic",
+    "cefazolin": "Cephalosporin antibiotic",
+    "cefdinir": "Cephalosporin antibiotic",
+    "azithromycin": "Macrolide antibiotic",
+    "clarithromycin": "Macrolide antibiotic",
+    "levofloxacin": "Fluoroquinolone antibiotic",
+    "ciprofloxacin": "Fluoroquinolone antibiotic",
+    "doxycycline": "Tetracycline antibiotic",
+    "trimethoprim-sulfamethoxazole": "Sulfonamide antibiotic",
+    "albuterol": "Short-acting beta agonist",
+    "ipratropium": "Anticholinergic bronchodilator",
+    "fluticasone": "Inhaled corticosteroid",
+    "prednisone": "Systemic corticosteroid",
+    "omeprazole": "Proton pump inhibitor",
+    "pantoprazole": "Proton pump inhibitor",
+    "famotidine": "H2 blocker",
+    "levothyroxine": "Thyroid hormone",
+    "sertraline": "SSRI",
+    "escitalopram": "SSRI",
+    "lorazepam": "Benzodiazepine",
+    "alprazolam": "Benzodiazepine",
+    "gabapentin": "Anticonvulsant / neuropathic agent",
+    "digoxin": "Cardiac glycoside",
+    "amiodarone": "Antiarrhythmic",
+    "potassium chloride": "Electrolyte supplement",
+    "docusate": "Stool softener",
+    "senna": "Stimulant laxative"
+  },
+  "high_risk_classes": [
+    "Anticoagulant",
+    "Opioid analgesic",
+    "Long-acting insulin",
+    "Rapid-acting insulin",
+    "Biguanide",
+    "Sulfonylurea",
+    "Benzodiazepine",
+    "Antiarrhythmic",
+    "Cardiac glycoside"
+  ],
+  "dose_change_thresholds": {
+    "significant_ratio": 1.5,
+    "critical_ratio": 2.0
+  }
+}

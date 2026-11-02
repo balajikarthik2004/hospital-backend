@@ -58,6 +58,9 @@ router.post('/assistant/ask', asking, c.assistantAsk);
 router.post('/appointments', booking, validate(publicBookingSchema), c.bookAppointment);
 router.post('/portal/login', signIn, validate(portalLoginSchema), c.portalLogin);
 router.get('/portal/me', requirePortal, c.portalMe);
+// Conversational booking. It writes real appointments against the signed-in
+// patient's chart, so it is limited like booking rather than like chat.
+router.post('/portal/assistant', requirePortal, booking, c.portalAssistant);
 
 /* ── The agents, acting for the signed-in patient ──────────────────────── */
 // Scoped by the portal token alone: there is no patient id on the wire, so

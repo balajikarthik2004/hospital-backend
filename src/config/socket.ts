@@ -12,6 +12,9 @@ export type SocketEvent =
   | 'bed:status-changed'
   | 'alert:critical-medication'
   | 'appointment:created'
+  | 'prescription:new'
+  | 'prescription:status-changed'
+  | 'prescription:dispensed'
   | 'notification:general';
 
 let io: IOServer | null = null;
