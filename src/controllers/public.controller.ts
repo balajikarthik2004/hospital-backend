@@ -387,3 +387,44 @@ export const portalExplainMedication = asyncHandler(async (req: Request, res: Re
     throw err;
   }
 });
+
+
+/**
+ * POST /api/public/portal/assistant — the booking assistant, for a patient.
+ *
+ * Restored from the parallel integration that was merged in: it does the same
+ * work as `portalAppointmentTurn` above and differs only in the shape it
+ * returns, which the older portal UI reads. Keep both until one of the two
+ * front ends is retired; they share this file's identity derivation, so
+ * neither can widen what the other may read.
+ */
+export const portalAssistant = asyncHandler(async (req: Request, res: Response) => {
+  const patientRef = (req as Request & { portalPatientId?: string }).portalPatientId;
+  if (!patientRef) throw badRequest('Your portal session has expired. Please sign in again.');
+
+  const message = String(req.body?.message ?? '').trim();
+  if (!message) throw badRequest('Please type a message');
+  if (message.length > 2000) throw badRequest('Please shorten your message');
+
+  const patient = await Patient.findById(patientRef).select('patientId').lean();
+  if (!patient) throw notFound('Patient');
+
+  const result = await appointmentChat(
+    patient.patientId,
+    message,
+    req.body?.sessionId ? String(req.body.sessionId) : null
+  );
+
+  await audit(req, {
+    action: 'agent.appointment.chat.portal',
+    entity: 'Appointment',
+    patientId: patient._id,
+    description: `Patient used the booking assistant (status ${result.status})`,
+  });
+
+  res.json({
+    sessionId: result.session_id,
+    reply: result.response,
+    status: result.status,
+  });
+});

@@ -295,3 +295,86 @@ export function askHospital(
     identity
   );
 }
+
+/* ── Compatibility with the parallel integration ──────────────────────────
+   `multiAgent.controller.ts`, `multiAgent.routes.ts` and this file's test
+   were written against an earlier version of this module that named the same
+   calls differently. Merging the two branches kept their callers and this
+   file, so the names they import are re-exported here.
+
+   These are aliases, not a second code path: both versions mint the identity
+   from the verified session, make the same five calls, and pass the agent
+   service's own error text through. Delete this block once one of the two
+   route trees is retired.
+   ────────────────────────────────────────────────────────────────────────── */
+
+/** Named `HospitalAnswerResult` above; both names describe the same payload. */
+export type HospitalAskResult = HospitalAnswerResult;
+
+/** Alias of `dischargeSummaryReport`. */
+export const dischargeSummary = dischargeSummaryReport;
+
+/** Alias of `askHospital`. */
+export const hospitalAsk = askHospital;
+
+/** The agent roster the older UI renders. Static: it describes the service. */
+export const MULTI_AGENTS = [
+  {
+    key: 'appointment',
+    name: 'Appointment Agent',
+    description:
+      'Finds doctors by specialty, checks live slot availability and books appointments with double-booking protection.',
+    endpoint: '/api/multi-agent/appointments/chat',
+    color: '#0891B2',
+    capabilities: [
+      'list_specialties',
+      'get_doctors_by_specialty',
+      'get_doctor_details',
+      'get_available_doctor_slots',
+      'check_slot_availability',
+      'get_appointment_details',
+      'get_patient_appointments',
+      'create_appointment',
+      'cancel_appointment',
+    ],
+  },
+  {
+    key: 'medication',
+    name: 'Medication Agent',
+    description:
+      'Retrieves a verified medication record and explains it in plain language, without inventing clinical advice.',
+    endpoint: '/api/multi-agent/medications/explain',
+    color: '#7C3AED',
+    capabilities: [
+      'get_medication_by_record_id',
+      'list_medications_for_patient',
+      'list_medications_for_admission',
+      'get_prescription_by_id',
+      'list_prescriptions_for_patient',
+      'prescription_counselling',
+    ],
+  },
+  {
+    key: 'discharge_summary',
+    name: 'Discharge Summary Agent',
+    description:
+      'Compiles a verified discharge package — admission, medications, procedures, labs, notes and vitals — into a structured report.',
+    endpoint: '/api/multi-agent/discharge-summaries/generate',
+    color: '#059669',
+    capabilities: ['get_discharge_package_by_id', 'list_discharge_packages'],
+  },
+  {
+    key: 'general_hospital',
+    name: 'General Hospital Assistant',
+    description:
+      'Answers questions about departments, services, visiting hours and policies, and screens for emergencies.',
+    endpoint: '/api/multi-agent/hospital/ask',
+    color: '#D97706',
+    capabilities: [
+      'search_hospital_departments',
+      'search_hospital_services',
+      'get_hospital_information',
+      'search_hospital_policies',
+    ],
+  },
+] as const;
