@@ -448,3 +448,46 @@ export const doctorProfileSchema = z.object({
   bufferMinutes: z.coerce.number().int().min(0).max(60).optional().default(5),
   isBookable: z.boolean().optional().default(false),
 });
+
+// ─── The specialist agents (MultiAgents/) ────────────────────────────────────
+// A session id is opaque: it is minted by the agent service and handed back
+// untouched, so it is only length-checked, never parsed.
+
+const agentSessionId = z.string().min(1).max(128).nullable().optional();
+
+export const assistantQuestionSchema = z.object({
+  question: z.string().trim().min(1, 'Please type a question').max(1000),
+  sessionId: agentSessionId,
+});
+
+export const assistantAppointmentSchema = z.object({
+  message: z.string().trim().min(1, 'Please type a message').max(2000),
+  sessionId: agentSessionId,
+  /** Which patient the clinician is acting for. Omitted = no chart in scope. */
+  patientId: objectId.nullable().optional(),
+});
+
+export const assistantMedicationSchema = z.object({
+  medicationRecordId: z.string().trim().min(1).max(64),
+  sessionId: agentSessionId,
+});
+
+export const assistantCounsellingSchema = z.object({
+  prescriptionId: z.string().trim().min(1).max(64),
+  sessionId: agentSessionId,
+});
+
+export const assistantDischargeSchema = z.object({
+  packageId: z.string().trim().min(1).max(50),
+  sessionId: agentSessionId,
+});
+
+export const portalAssistantAppointmentSchema = z.object({
+  message: z.string().trim().min(1, 'Please type a message').max(2000),
+  sessionId: agentSessionId,
+});
+
+export const portalAssistantMedicationSchema = z.object({
+  medicationRecordId: z.string().trim().min(1).max(64),
+  sessionId: agentSessionId,
+});

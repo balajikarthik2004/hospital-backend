@@ -13,6 +13,7 @@ import appointmentRoutes from './routes/appointment.routes.js';
 import bedRoutes from './routes/bed.routes.js';
 import dischargeRoutes from './routes/discharge.routes.js';
 import agentRoutes from './routes/agent.routes.js';
+import assistantRoutes from './routes/assistant.routes.js';
 import analyticsRoutes from './routes/analytics.routes.js';
 import auditRoutes from './routes/audit.routes.js';
 import userRoutes from './routes/user.routes.js';
@@ -48,6 +49,8 @@ export function createApp() {
   app.use('/api/beds', bedRoutes);
   app.use('/api/discharge', dischargeRoutes);
   app.use('/api/agents', agentRoutes);
+  // The four independent specialist agents (MultiAgents/), for staff.
+  app.use('/api/assistant', assistantRoutes);
   app.use('/api/analytics', analyticsRoutes);
   app.use('/api/audit', auditRoutes);
   app.use('/api/users', userRoutes);

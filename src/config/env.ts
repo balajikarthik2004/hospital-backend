@@ -19,6 +19,16 @@ const schema = z.object({
   ANTHROPIC_API_KEY: z.string().optional().default(''),
   ANTHROPIC_MODEL: z.string().default('claude-sonnet-5-5'),
   AGENT_SERVICE_URL: z.string().default('http://localhost:8000'),
+  /**
+   * The four independent specialist agents (MultiAgents/). A separate service
+   * from AGENT_SERVICE_URL above — that one orchestrates the discharge DAG,
+   * this one answers appointment, medication, discharge-summary and general
+   * hospital questions. Optional: when it is down, /api/assistant reports it
+   * offline rather than failing.
+   */
+  MULTI_AGENT_SERVICE_URL: z.string().default('http://localhost:8002'),
+  /** How long an agent turn may take. Groq throttle backoff eats into this. */
+  MULTI_AGENT_TIMEOUT_MS: z.coerce.number().default(120_000),
   CLIENT_ORIGIN: z.string().default('*'),
 });
 

@@ -48,9 +48,22 @@ router.post('/emergency-check', compute, c.emergencyCheck);
 router.get('/agent', browse, c.agentGreeting);
 router.post('/agent', booking, c.agentTurn);
 
+/* ── The hospital assistant ────────────────────────────────────────────── */
+// An agent turn costs a model call, so it is limited more tightly than
+// browsing but more generously than anything that writes a record.
+const asking = rateLimit({ windowMs: 60_000, max: 10 });
+router.post('/assistant/ask', asking, c.assistantAsk);
+
 /* ── Booking and the portal ────────────────────────────────────────────── */
 router.post('/appointments', booking, validate(publicBookingSchema), c.bookAppointment);
 router.post('/portal/login', signIn, validate(portalLoginSchema), c.portalLogin);
 router.get('/portal/me', requirePortal, c.portalMe);
+
+/* ── The agents, acting for the signed-in patient ──────────────────────── */
+// Scoped by the portal token alone: there is no patient id on the wire, so
+// there is nothing for a caller to change.
+router.post('/portal/assistant/appointments', requirePortal, booking, c.portalAppointmentTurn);
+router.get('/portal/assistant/medications', requirePortal, browse, c.portalMedications);
+router.post('/portal/assistant/medications', requirePortal, asking, c.portalExplainMedication);
 
 export default router;

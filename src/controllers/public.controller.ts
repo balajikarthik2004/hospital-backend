@@ -14,7 +14,15 @@ import {
   LOOKUP_FAILED,
 } from '../services/bookingService.js';
 import { greeting, respond, type AgentState } from '../services/bookingAgent.js';
-import { asyncHandler, badRequest, notFound, age } from '../utils/helpers.js';
+import { HttpError, asyncHandler, badRequest, notFound, age } from '../utils/helpers.js';
+import {
+  AgentServiceError,
+  GUEST_IDENTITY,
+  appointmentChat,
+  askHospital,
+  medicationDetails,
+  patientIdentity,
+} from '../services/multiAgentService.js';
 import { ID_PREFIX, nextId } from '../utils/idGenerator.js';
 import { audit } from '../middleware/audit.js';
 
@@ -263,4 +271,119 @@ function maskPhone(phone: string): string {
 export const emergencyCheck = asyncHandler(async (req: Request, res: Response) => {
   const text = String(req.body?.complaint ?? '').slice(0, 2000);
   res.json({ emergency: detectEmergency(text) });
+});
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   The specialist agents, for visitors and for patients in the portal.
+
+   The identity sent to the agent service is minted here from the verified
+   session and never read from the request. A visitor is `guest_visitor`,
+   which the agents treat as holding no chart at all; a portal session is the
+   one patient its token is scoped to, so the agents' own identity binding
+   pins every tool call to that chart.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/** POST /api/public/assistant/ask — the general hospital assistant, for visitors. */
+export const assistantAsk = asyncHandler(async (req: Request, res: Response) => {
+  const { question, sessionId } = req.body ?? {};
+  const text = String(question ?? '').trim();
+  if (!text) throw badRequest('Please type a question');
+
+  try {
+    const result = await askHospital(GUEST_IDENTITY, text.slice(0, 1000), sessionId ?? null);
+    res.json(result);
+  } catch (err) {
+    if (err instanceof AgentServiceError) {
+      throw new HttpError(
+        err.status,
+        err.status === 503
+          ? 'The hospital assistant is offline just now. Please call +91 44 4000 1200 and someone will help.'
+          : err.message
+      );
+    }
+    throw err;
+  }
+});
+
+/** The patient a portal token is scoped to, as the agents address them. */
+async function portalIdentity(req: Request): Promise<{ id: string; identity: string }> {
+  const patientRef = (req as Request & { portalPatientId?: string }).portalPatientId;
+  if (!patientRef) throw badRequest('Your portal session has expired. Please sign in again.');
+
+  const patient = await Patient.findById(patientRef).select('patientId').lean();
+  if (!patient) throw notFound('Patient');
+  return { id: String(patient._id), identity: patientIdentity(patient.patientId) };
+}
+
+/** POST /api/public/portal/assistant/appointments — book or ask, as yourself. */
+export const portalAppointmentTurn = asyncHandler(async (req: Request, res: Response) => {
+  const { message, sessionId } = req.body ?? {};
+  const text = String(message ?? '').trim();
+  if (!text) throw badRequest('Please type a message');
+
+  const { id, identity } = await portalIdentity(req);
+  try {
+    const result = await appointmentChat(identity, text.slice(0, 2000), sessionId ?? null);
+    // The agent can create a real appointment, so the turn is attributable
+    // even though no member of staff was involved.
+    await audit(req, {
+      action: 'portal.assistant.appointment',
+      entity: 'Patient',
+      entityId: id,
+      patientId: id,
+      description: `Portal appointment assistant: "${text.slice(0, 140)}"`,
+    });
+    res.json(result);
+  } catch (err) {
+    if (err instanceof AgentServiceError) throw new HttpError(err.status, err.message);
+    throw err;
+  }
+});
+
+/**
+ * GET /api/public/portal/assistant/medications — the patient's own medication
+ * records, as identifiers the medication agent accepts.
+ *
+ * Only the discharge list. A patient's inpatient and pre-admission lists are
+ * working clinical documents; what they take home is what they need explained.
+ */
+export const portalMedications = asyncHandler(async (req: Request, res: Response) => {
+  const { id } = await portalIdentity(req);
+
+  const { Medication } = await import('../models/Medication.js');
+  const lists = await Medication.find({ patientId: id, listType: 'discharge' })
+    .select('medications')
+    .lean();
+
+  res.json({
+    medications: lists.flatMap((list) =>
+      (list.medications ?? [])
+        .filter((item) => item.isActive)
+        .map((item) => ({
+          medicationRecordId: String(item._id),
+          drugName: item.drugName,
+          dosage: item.dosage,
+          frequency: item.frequency,
+          route: item.route,
+        }))
+    ),
+  });
+});
+
+/** POST /api/public/portal/assistant/medications — explain one of your own. */
+export const portalExplainMedication = asyncHandler(async (req: Request, res: Response) => {
+  const { medicationRecordId, sessionId } = req.body ?? {};
+  const recordId = String(medicationRecordId ?? '').trim();
+  if (!recordId) throw badRequest('Which medication would you like explained?');
+
+  const { identity } = await portalIdentity(req);
+  try {
+    // The agent refuses a record belonging to anyone else, because `identity`
+    // is this patient's own id — the ownership check is on its side, not ours.
+    const result = await medicationDetails(identity, recordId.slice(0, 64), sessionId ?? null);
+    res.json(result);
+  } catch (err) {
+    if (err instanceof AgentServiceError) throw new HttpError(err.status, err.message);
+    throw err;
+  }
 });
