@@ -34,4 +34,5 @@ export const ID_PREFIX = {
   admission: 'ADM',
   appointment: 'APT',
   discharge: 'DIS',
+  prescription: 'RX',
 } as const;

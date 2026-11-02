@@ -1,9 +1,8 @@
 /**
- * Built-in orchestrator — a TypeScript implementation of the five agents
- * described in Section 8 of the build spec. It is used directly when the
- * Python LangGraph service is not running, so the discharge workflow is always
- * functional. The rules engines read the same JSON knowledge bases that the
- * Python service uses, so behaviour is identical.
+ * The discharge orchestrator — a TypeScript implementation of the five agents
+ * described in Section 8 of the build spec. It runs in this process and is the
+ * only path: there is no sidecar to fall back from. The rules engines read the
+ * JSON knowledge bases in `hospital-backend/rules`.
  *
  * Safety contract (Section 8.2 / Key Design Principles):
  *   - Agents produce DRAFTS only. Nothing is auto-approved.

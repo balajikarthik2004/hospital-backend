@@ -3,7 +3,6 @@ import { createApp } from './app.js';
 import { connectDB, disconnectDB } from './config/db.js';
 import { initSocket } from './config/socket.js';
 import { env } from './config/env.js';
-import { agentServiceHealthy } from './services/agentBridgeService.js';
 import { llm } from './services/llmClient.js';
 import { User } from './models/User.js';
 import { ensureDoctors } from './services/ensureDoctors.js';
@@ -38,14 +37,11 @@ async function main() {
     console.log('');
   });
 
-  const pythonOnline = await agentServiceHealthy();
-
   console.log(
     `  database        ${inMemory ? 'bundled local MongoDB (no mongod found)' : 'MongoDB'}`
   );
-  console.log(
-    `  agent engine    ${pythonOnline ? 'Python LangGraph service' : 'built-in TypeScript orchestrator'}`
-  );
+  console.log('  discharge DAG   built-in TypeScript orchestrator');
+  console.log(`  AI agents       ${env.MULTI_AGENT_SERVICE_URL} (hospital-multi-agent)`);
   console.log(
     `  LLM             ${llm.available ? `${env.ANTHROPIC_MODEL} via Anthropic API` : 'not configured — deterministic templates'}`
   );

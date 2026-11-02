@@ -48,9 +48,20 @@ router.post('/emergency-check', compute, c.emergencyCheck);
 router.get('/agent', browse, c.agentGreeting);
 router.post('/agent', booking, c.agentTurn);
 
+/* ── The AI hospital assistant ─────────────────────────────────────────── */
+// Answers questions about departments, services and policies. It reads no
+// chart, so guests may use it — but each turn costs an LLM call, so it is
+// limited well below the browse endpoints.
+const assistant = rateLimit({ windowMs: 60_000, max: 10 });
+router.get('/assistant/health', browse, c.assistantHealth);
+router.post('/assistant/ask', assistant, c.assistantAsk);
+
 /* ── Booking and the portal ────────────────────────────────────────────── */
 router.post('/appointments', booking, validate(publicBookingSchema), c.bookAppointment);
 router.post('/portal/login', signIn, validate(portalLoginSchema), c.portalLogin);
 router.get('/portal/me', requirePortal, c.portalMe);
+// Conversational booking. It writes real appointments against the signed-in
+// patient's chart, so it is limited like booking rather than like chat.
+router.post('/portal/assistant', requirePortal, booking, c.portalAssistant);
 
 export default router;

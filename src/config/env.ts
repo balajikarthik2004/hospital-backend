@@ -18,7 +18,16 @@ const schema = z.object({
   JWT_EXPIRES_IN: z.string().default('7d'),
   ANTHROPIC_API_KEY: z.string().optional().default(''),
   ANTHROPIC_MODEL: z.string().default('claude-sonnet-5-5'),
-  AGENT_SERVICE_URL: z.string().default('http://localhost:8000'),
+  /**
+   * The Python multi-agent service (Appointment, Medication, Discharge
+   * Summary and General Hospital agents). It reads the same MongoDB this
+   * backend writes, so it is a sibling service rather than a data source.
+   * When it is down, /api/multi-agent reports it as offline and the clinical
+   * workflow is unaffected.
+   */
+  MULTI_AGENT_SERVICE_URL: z.string().default('http://localhost:8001'),
+  /** How long to wait on an agent turn. LLM calls are slow; booking is worth the wait. */
+  MULTI_AGENT_TIMEOUT_MS: z.coerce.number().default(120_000),
   CLIENT_ORIGIN: z.string().default('*'),
 });
 

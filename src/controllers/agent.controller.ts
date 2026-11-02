@@ -4,7 +4,6 @@ import { auditAgent } from '../middleware/audit.js';
 import { emit } from '../config/socket.js';
 import { asyncHandler, badRequest, notFound } from '../utils/helpers.js';
 import { buildAgentContext } from '../services/dischargeService.js';
-import { agentServiceHealth } from '../services/agentBridgeService.js';
 import {
   explainFlags,
   runClinicalSummaryAgent,
@@ -202,22 +201,17 @@ export const agentStatus = asyncHandler(async (req: Request, res: Response) => {
   });
 });
 
-/** GET /api/agents/health — which engine is actually driving the agents. */
+/** GET /api/agents/health — what is driving the discharge pipeline. */
 export const agentHealth = asyncHandler(async (_req: Request, res: Response) => {
-  const python = await agentServiceHealth();
-  const engine = !python.online
-    ? 'builtin'
-    : python.engine === 'asyncio-fallback'
-      ? 'python-asyncio'
-      : 'python-langgraph';
+  // The discharge DAG runs in this process. Nothing is probed, because there
+  // is nothing left to probe — reporting an engine that was not actually
+  // running is the exact failure this endpoint exists to prevent.
   res.json({
-    engine,
-    pythonService: {
-      url: env.AGENT_SERVICE_URL,
-      online: python.online,
-      // What the service reports it is running, so a LangGraph install that
-      // silently failed to import shows up here instead of being claimed.
-      engine: python.engine ?? null,
+    engine: 'builtin',
+    multiAgentService: {
+      url: env.MULTI_AGENT_SERVICE_URL,
+      healthEndpoint: '/api/multi-agent/health',
+      note: 'The four specialist agents are a separate service. Check it there.',
     },
     llm: {
       configured: llm.available,

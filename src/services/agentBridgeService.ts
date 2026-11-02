@@ -1,4 +1,3 @@
-import { env } from '../config/env.js';
 import {
   explainFlags,
   runClinicalSummaryAgent,
@@ -12,7 +11,8 @@ import {
   type SafetyCheck,
 } from './localAgents.js';
 
-export type AgentEngine = 'python-langgraph' | 'python-asyncio' | 'builtin';
+/** The discharge DAG runs in-process. There is no remote engine. */
+export type AgentEngine = 'builtin';
 
 export interface OrchestrationResult {
   engine: AgentEngine;
@@ -36,88 +36,20 @@ export interface AgentRun {
 
 type Progress = (agent: string, status: 'running' | 'complete' | 'failed', extra?: unknown) => void;
 
-export interface AgentServiceHealth {
-  online: boolean;
-  /** What the service says it will use: "langgraph" or "asyncio-fallback". */
-  engine?: string;
-  llm?: { configured: boolean; model: string | null };
-}
-
 /**
- * Asks the Python service what it is, not just whether it answers. Reporting
- * "python-langgraph" purely because a socket accepted a connection was how the
- * UI ended up claiming an engine that was not actually running.
- */
-export async function agentServiceHealth(): Promise<AgentServiceHealth> {
-  try {
-    const controller = new AbortController();
-    const t = setTimeout(() => controller.abort(), 1500);
-    const res = await fetch(`${env.AGENT_SERVICE_URL}/health`, { signal: controller.signal });
-    clearTimeout(t);
-    if (!res.ok) return { online: false };
-    const body = (await res.json()) as { engine?: string; llm?: AgentServiceHealth['llm'] };
-    return { online: true, engine: body.engine, llm: body.llm };
-  } catch {
-    return { online: false };
-  }
-}
-
-/** Is the Python agent service reachable? */
-export async function agentServiceHealthy(): Promise<boolean> {
-  try {
-    const controller = new AbortController();
-    const t = setTimeout(() => controller.abort(), 1500);
-    const res = await fetch(`${env.AGENT_SERVICE_URL}/health`, { signal: controller.signal });
-    clearTimeout(t);
-    return res.ok;
-  } catch {
-    return false;
-  }
-}
-
-/**
- * Runs the discharge DAG. Prefers the Python LangGraph service; falls back to
- * the equivalent built-in TypeScript orchestrator when it is not running.
+ * Runs the discharge DAG in-process.
+ *
+ * This used to try a Python sidecar first and fall back here. The sidecar is
+ * gone, and with it the remote path, the health probes and the engine
+ * negotiation — the built-in orchestrator below already ran the identical
+ * DAG every time the sidecar was unavailable, so this is the same pipeline
+ * clinicians were already getting, now as the only path.
  */
 export async function orchestrateDischarge(
   ctx: AgentContext,
   onProgress: Progress = () => {}
 ): Promise<OrchestrationResult> {
-  if (await agentServiceHealthy()) {
-    try {
-      return await runRemote(ctx, onProgress);
-    } catch (err) {
-      console.warn(
-        `[agents] Python service failed (${(err as Error).message}); falling back to the built-in orchestrator`
-      );
-    }
-  }
   return runLocal(ctx, onProgress);
-}
-
-async function runRemote(ctx: AgentContext, onProgress: Progress): Promise<OrchestrationResult> {
-  onProgress('orchestrator', 'running');
-  const controller = new AbortController();
-  const t = setTimeout(() => controller.abort(), 180_000);
-
-  try {
-    const res = await fetch(`${env.AGENT_SERVICE_URL}/orchestrate/discharge`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(ctx),
-      signal: controller.signal,
-    });
-    if (!res.ok) throw new Error(`agent service responded ${res.status}`);
-    const data = (await res.json()) as Omit<OrchestrationResult, 'engine'> & { engine?: string };
-    for (const run of data.runs ?? []) onProgress(run.agent, run.status);
-    onProgress('orchestrator', 'complete');
-    // Trust what the service reports it ran, rather than assuming LangGraph.
-    const engine: AgentEngine =
-      data.engine === 'asyncio-fallback' ? 'python-asyncio' : 'python-langgraph';
-    return { ...data, engine };
-  } finally {
-    clearTimeout(t);
-  }
 }
 
 /**

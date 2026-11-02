@@ -264,3 +264,85 @@ export const emergencyCheck = asyncHandler(async (req: Request, res: Response) =
   const text = String(req.body?.complaint ?? '').slice(0, 2000);
   res.json({ emergency: detectEmergency(text) });
 });
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   The AI assistants on the public site.
+
+   Two deliberate differences from the staff routes in
+   `multiAgent.controller.ts`:
+
+   1. The hospital assistant answers guests. It only ever reads departments,
+      services and published policies, so there is no chart to protect — and
+      a visitor who has to register before asking about visiting hours will
+      simply phone instead.
+
+   2. The booking assistant does not. It creates real appointments against a
+      real chart, so it requires a portal session and is scoped to that one
+      patient. The identity comes from the token, never from the request body.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/** POST /api/public/assistant/ask — general hospital questions, open to all. */
+export const assistantAsk = asyncHandler(async (req: Request, res: Response) => {
+  const question = String(req.body?.question ?? '').trim();
+  if (!question) throw badRequest('Please type a question');
+  if (question.length > 1000) throw badRequest('Please shorten your question');
+
+  const { hospitalAsk } = await import('../services/multiAgentService.js');
+  const result = await hospitalAsk(
+    'guest_visitor',
+    question,
+    req.body?.sessionId ? String(req.body.sessionId) : null
+  );
+
+  res.json({
+    question: result.question,
+    answer: result.answer,
+    sources: result.sources ?? [],
+    sessionId: result.session_id ?? null,
+    status: result.status,
+    isEmergency: result.status === 'emergency_alert',
+  });
+});
+
+/** GET /api/public/assistant/health — so the site can hide the widget when it is down. */
+export const assistantHealth = asyncHandler(async (_req: Request, res: Response) => {
+  const { multiAgentHealth } = await import('../services/multiAgentService.js');
+  const service = await multiAgentHealth();
+  res.json({ online: service.online && service.databaseConnected !== false });
+});
+
+/**
+ * POST /api/public/portal/assistant — conversational booking for a signed-in
+ * patient. Requires a portal token; the chart is taken from that token.
+ */
+export const portalAssistant = asyncHandler(async (req: Request, res: Response) => {
+  const patientRef = (req as Request & { portalPatientId?: string }).portalPatientId;
+  if (!patientRef) throw badRequest('Your portal session has expired. Please sign in again.');
+
+  const message = String(req.body?.message ?? '').trim();
+  if (!message) throw badRequest('Please type a message');
+  if (message.length > 2000) throw badRequest('Please shorten your message');
+
+  const patient = await Patient.findById(patientRef).select('patientId').lean();
+  if (!patient) throw notFound('Patient');
+
+  const { appointmentChat } = await import('../services/multiAgentService.js');
+  const result = await appointmentChat(
+    patient.patientId,
+    message,
+    req.body?.sessionId ? String(req.body.sessionId) : null
+  );
+
+  await audit(req, {
+    action: 'agent.appointment.chat.portal',
+    entity: 'Appointment',
+    patientId: patient._id,
+    description: `Patient used the booking assistant (status ${result.status})`,
+  });
+
+  res.json({
+    sessionId: result.session_id,
+    reply: result.response,
+    status: result.status,
+  });
+});

@@ -4,6 +4,10 @@ import { PATIENT_STATUSES } from '../models/Patient.js';
 import { APPOINTMENT_STATUSES, APPOINTMENT_TYPES } from '../models/Appointment.js';
 import { LIST_TYPES, ROUTES } from '../models/Medication.js';
 import { BED_STATUSES, BED_TYPES } from '../models/Bed.js';
+import {
+  PRESCRIPTION_PRIORITIES,
+  PRESCRIPTION_STATUSES,
+} from '../models/Prescription.js';
 
 const objectId = z.string().regex(/^[0-9a-fA-F]{24}$/, 'Expected a MongoDB ObjectId');
 
@@ -255,6 +259,76 @@ export const medicationListSchema = z.object({
 
 export const updateMedicationListSchema = z.object({
   medications: z.array(medicationItemInput),
+});
+
+// ─── Prescriptions and dispensing ────────────────────────────────────────────
+
+export const prescriptionItemInput = z.object({
+  drugName: z.string().min(1, 'A drug name is required'),
+  genericName: z.string().optional().default(''),
+  drugClass: z.string().optional().default(''),
+  // Dose and frequency are not required at the schema level because a doctor
+  // may save an incomplete draft. The safety screen raises a blocking flag
+  // for anything missing, so an incomplete script cannot reach the counter.
+  dosage: z.string().optional().default(''),
+  frequency: z.string().optional().default(''),
+  route: z.enum(ROUTES).optional().default('oral'),
+  durationDays: z.coerce.number().int().min(0).max(365).optional().default(0),
+  quantity: z.coerce.number().min(0).max(10_000).optional().default(0),
+  instructions: z.string().max(500).optional().default(''),
+  substitutionAllowed: z.boolean().optional().default(true),
+});
+
+export const createPrescriptionSchema = z.object({
+  patientId: objectId,
+  admissionId: objectId.nullable().optional(),
+  diagnosis: z.string().max(300).optional().default(''),
+  notes: z.string().max(1000).optional().default(''),
+  priority: z.enum(PRESCRIPTION_PRIORITIES).optional().default('routine'),
+  items: z.array(prescriptionItemInput).min(1, 'Add at least one medicine'),
+});
+
+export const updatePrescriptionSchema = z.object({
+  diagnosis: z.string().max(300).optional(),
+  notes: z.string().max(1000).optional(),
+  priority: z.enum(PRESCRIPTION_PRIORITIES).optional(),
+  items: z.array(prescriptionItemInput).min(1).optional(),
+});
+
+export const prescriptionQuerySchema = z.object({
+  status: z.enum(PRESCRIPTION_STATUSES).optional(),
+  patientId: objectId.optional(),
+  /** "queue" is every status the pharmacy still has work to do on. */
+  scope: z.enum(['all', 'queue', 'mine']).optional().default('all'),
+  search: z.string().max(100).optional(),
+  page: z.coerce.number().int().min(1).optional(),
+  limit: z.coerce.number().int().min(1).max(200).optional(),
+});
+
+export const acknowledgeFlagSchema = z.object({
+  flagId: z.string().min(1),
+  note: z.string().max(500).optional().default(''),
+});
+
+export const dispensePrescriptionSchema = z.object({
+  /** Who physically collected it — the patient, or a named relative. */
+  collectedBy: z.string().min(1, 'Record who collected the medicines').max(120),
+  notes: z.string().max(1000).optional().default(''),
+  items: z
+    .array(
+      z.object({
+        itemId: objectId,
+        dispensedQuantity: z.coerce.number().min(0).max(10_000).optional(),
+        substitutedWith: z.string().max(120).nullable().optional(),
+        pharmacyNote: z.string().max(500).nullable().optional(),
+      })
+    )
+    .optional()
+    .default([]),
+});
+
+export const cancelPrescriptionSchema = z.object({
+  reason: z.string().min(1, 'Give a reason so the ward knows why').max(500),
 });
 
 // ─── Appointments ────────────────────────────────────────────────────────────
